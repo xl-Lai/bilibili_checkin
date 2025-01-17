@@ -2,6 +2,21 @@ import requests
 import json
 import time
 import os
+import sys
+from datetime import datetime, timedelta, timezone
+from loguru import logger
+
+# 配置日志
+class BeijingFormatter:
+    @staticmethod
+    def format(record):
+        dt = datetime.fromtimestamp(record["time"].timestamp(), tz=timezone.utc)
+        local_dt = dt + timedelta(hours=8)
+        record["extra"]["local_time"] = local_dt.strftime('%H:%M:%S,%f')[:-3]
+        return "{time:YYYY-MM-DD HH:mm:ss,SSS}(CST {extra[local_time]}) - {level} - {message}\n"
+
+logger.remove()
+logger.add(sys.stdout, format=BeijingFormatter.format, level="INFO", colorize=True)
 
 class BilibiliTask:
     def __init__(self, cookie):
@@ -18,6 +33,16 @@ class BilibiliTask:
             if item.strip().startswith('bili_jct'):
                 return item.split('=')[1]
         return None
+
+    def check_login_status(self):
+        """检查登录状态"""
+        try:
+            res = requests.get('https://api.bilibili.com/x/web-interface/nav', headers=self.headers)
+            if res.json()['code'] == -101:
+                return False, '账号未登录'
+            return True, None
+        except Exception as e:
+            return False, str(e)
         
     def share_video(self):
         """分享视频"""
@@ -97,15 +122,50 @@ class BilibiliTask:
         except:
             return None
 
+def log_info(tasks, user_info):
+    """记录任务和用户信息的日志"""
+    print('=== 任务完成情况 ===')
+    for name, (success, message) in tasks.items():
+        if success:
+            logger.info(f'{name}: 成功')
+        else:
+            logger.error(f'{name}: 失败，原因: {message}')
+        
+    if user_info:
+        print('\n=== 用户信息 ===')
+        print(f'用户名: {user_info["uname"][0]}{"*" * (len(user_info["uname"]) - 1)}')
+        print(f'UID: {str(user_info["uid"])[:2]}{"*" * (len(str(user_info["uid"])) - 4)}{str(user_info["uid"])[-2:]}')
+        print(f'等级: {user_info["level"]}')
+        print(f'经验: {user_info["exp"]}')
+        print(f'硬币: {user_info["coin"]}')
+
 def main():
     # 从环境变量获取cookie
     cookie = os.environ.get('BILIBILI_COOKIE')
+    
+    # 如果环境变量中没有，则尝试从文件读取(用于本地运行测试)
     if not cookie:
-        print('未设置cookie')
-        return
-        sys.exit(1)     # 退出程序
+        try:
+            with open('cookie.txt', 'r', encoding='utf-8') as f:
+                cookie = f.read().strip()
+        except FileNotFoundError:
+            logger.error('未找到cookie.txt文件且环境变量未设置')
+            sys.exit(1)
+        except Exception as e:
+            logger.error(f'读取cookie失败: {e}')
+            sys.exit(1)
+    
+    if not cookie:
+        logger.error('cookie为空')
+        sys.exit(1)
 
     bili = BilibiliTask(cookie)
+    
+    # 检查登录状态
+    login_status, message = bili.check_login_status()
+    if not login_status:
+        logger.error(f'登录失败，原因: {message}')
+        sys.exit(1)
     
     # 执行每日任务
     tasks = {
@@ -118,23 +178,8 @@ def main():
     # 获取用户信息
     user_info = bili.get_user_info()
     
-    # 输出结果
-    print('=== 任务完成情况 ===')
-    for name, (success, message) in tasks.items():
-        if success:
-            print(f'{name}: 成功')
-        else:
-            print(f'{name}: 失败，原因: {message}')
-        
-    if user_info:
-        print(f'\n=== 用户信息 ===')
-        uname = user_info["uname"]
-        uid = str(user_info["uid"])  # 将uid转换为字符串
-        print(f'用户名: {uname[0]}{"*" * (len(uname) - 1)}')
-        print(f'UID: {uid[:2]}{"*" * (len(uid) - 4)}{uid[-2:]}')
-        print(f'等级: {user_info["level"]}')
-        print(f'经验: {user_info["exp"]}')
-        print(f'硬币: {user_info["coin"]}')
+    # 记录日志
+    log_info(tasks, user_info)
 
 if __name__ == '__main__':
     main()
