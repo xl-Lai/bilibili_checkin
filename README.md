@@ -1,4 +1,9 @@
 # bilibili_checkin
+<div align="center">
+
+[![Bilibili Daily Checkin](https://github.com/Dangks/bilibili_checkin/actions/workflows/Bilibili_DailyCheckin.yml/badge.svg)](https://github.com/Dangks/bilibili_checkin/actions/workflows/Bilibili_DailyCheckin.yml)
+
+</div>
 
 ## 项目简介
 这是一个自动化打卡脚本，旨在帮助用户完成B站的每日签到任务，包括分享视频、观看视频、~~直播签到~~和漫画签到。通过使用GitHub Actions，可以实现每日自动运行脚本，完成签到任务并获取相应的奖励。  
@@ -56,12 +61,13 @@
   - 如果想改成随机视频，可以像share_video()方法一样；指定固定视频是一种保守稳妥的做法，但不是必须的。如果你想改成随机视频完全可以。  
 
 
-## 贡献
+## 贡献指南
 欢迎提交Issue和Pull Request来改进本项目。
 
 分支说明：
-- [main](https://github.com/Dangks/bilibili_checkin/tree/main)：主线分支，包含最新稳定版本代码
-- [dev](https://github.com/Dangks/bilibili_checkin/tree/dev)：开发分支，包含开发中的问题修改和新功能测试
+- [main](https://github.com/Dangks/bilibili_checkin/tree/main)：主线分支，包含最新稳定版本代码  
+- [dev](https://github.com/Dangks/bilibili_checkin/tree/dev)：开发分支，包含开发中的问题修改和新功能测试  
+**请注意，直接向 `main` 分支发起的 PR 将不会被接受。
 
 
 ## 许可证
