@@ -2,7 +2,7 @@ name: Bilibili Daily Checkin
 
 on:
   schedule:
-    - cron: '10 0 * * *'  # UTC时间每天0:10点执行(对应CST时间 8:10)
+    - cron: '06 17 * * *'  # UTC时间每天17:06点执行(对应CST时间 1:06)
   workflow_dispatch:  # 支持手动触发
 
 jobs:
